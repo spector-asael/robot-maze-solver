@@ -1,8 +1,8 @@
 #include "MeMegaPi.h"
 
 // Motors
-MeMegaPiDCMotor motorL(PORT4B); 
-MeMegaPiDCMotor motorR(PORT3B);
+MeMegaPiDCMotor motorL(PORT2B); 
+MeMegaPiDCMotor motorR(PORT1B);
 
 // Ultrasonic sensor is on the right-side of the robot
 MeUltrasonicSensor ultraRight(PORT_7); 
@@ -14,7 +14,7 @@ MeLineFollower lineFront(PORT_8);
 MeRGBLed rgbLed(PORT_6);
 
 // The base speed for the motors used throughout the program.
-const int BASESPEED = 60;
+const int BASESPEED = 70;
 
 // This flag indicates whether or not the robot has entered "island mode" 
 // Island mode is achieved once the robot does 4 consecutive left turns.
@@ -45,7 +45,7 @@ void stopMotors() {
 // The motor speeds are slightly faster for faster speeds.
 void moveForward() {
   Serial.println("[MOTOR] Forward");
-  motorL.run(BASESPEED + 20);
+  motorL.run(BASESPEED + 10);
   motorR.run(-BASESPEED - 20);
 }
 
@@ -72,7 +72,7 @@ void turnLeft() {
   // Look at it go!
   motorL.run(-BASESPEED * 4);
   motorR.run(-BASESPEED * 4);
-  delay(200);
+  delay(210);
 
   // Now we can stop the motor and end the function.
   stopMotors();
@@ -85,8 +85,8 @@ void turnLeft() {
 // So it can perform right turns pre-emptively before its hit a wall
 void moveRight() {
     Serial.println("[MOTOR] MOVE LEFT");
-    motorL.run(BASESPEED * 2);
-    motorR.run(-BASESPEED - 20);
+    motorL.run(BASESPEED * 3);
+    motorR.run(-BASESPEED + 20);
 }
 
 // The turn around function.
@@ -97,21 +97,21 @@ void moveRight() {
 void turnAround() {
   turnLeft();
   readjustRightwardsVeryStrong();
-  delay(800);
+  delay(900);
   moveForward();
-  delay(100);
+  delay(50);
 }
 
 // A very slight left adjustment for when the robot is slightly too close to the wall.
 void readjustLeftwards() {
-  Serial.println("[MOTOR] READJUST RIGHT");
+  Serial.println("[MOTOR] READJUST LEFT");
   motorL.run(BASESPEED);
   motorR.run(-BASESPEED - 20);
 }
 
 // A harsh right adjustment for when the robot is straying too far away from the wall!
 void readjustLeftwardsStrong() {
-  Serial.println("[MOTOR] READJUST RIGHT STRONG");
+  Serial.println("[MOTOR] READJUST LEFT STRONG");
   motorL.run(BASESPEED );
   motorR.run(-BASESPEED - 40);
 }
@@ -134,9 +134,9 @@ void readjustRightwardsStrong() {
 // The robot slows down the left motor and speeds up the 
 // right motor to make a very sharp right turn to get back on track.
 void readjustRightwardsVeryStrong() {
-  Serial.println("[MOTOR] READJUST LEFT VERY STRONG");
-  motorL.run(BASESPEED + 30);
-  motorR.run(-BASESPEED - 10);
+  Serial.println("[MOTOR] READJUST RIGHT VERY STRONG");
+  motorL.run(BASESPEED + 40);
+  motorR.run(-BASESPEED - 5);
 }
 
 //                SETUP
@@ -179,7 +179,7 @@ void loop() {
   // We read the ultrasonic sensor to check how far we are from the wall on the right every loop iteration.
   int rightDist = ultraRight.distanceCm();
   // We check if there is a wall on the right by checking if the distance is between 0 and 15.
-  bool rightBlocked = (rightDist > 2 && rightDist < 15);
+  bool rightBlocked = (rightDist > 0 && rightDist < 15);
 
   // If we are not in island mode, we execute the basic movement function to navigate the maze.
   // If we are in island mode, we execute the island movement function to navigate the island.
@@ -213,16 +213,16 @@ void basicMovement(int front, int rightDist, bool rightBlocked) {
     }
 
   // Correcting the robot's path to ensure that it stays parallel to the wall on the right.
-  if (rightDist <= 3.5 && rightDist == 400) 
+  if (rightDist <= 3.5 || rightDist == 400) 
   // Way too close to the wall! We need to make a harsh left turn to readjust ourselves.
     readjustLeftwardsStrong();
-  else if (rightDist <= 4.5)
+  else if (rightDist <= 5)
   // Slightly too close to the wall. We need to make a slight left turn to readjust ourselves.
     readjustLeftwards();
-  else if (rightDist >= 5.5 && rightDist <= 7)
+  else if (rightDist >= 6.25 && rightDist <= 7.5)
   // Slightly too far away from the wall. We need to make a slight right turn to readjust ourselves.
     readjustRightwards();
-  else if (rightDist > 7 && rightDist <= 8.5)
+  else if (rightDist > 7.5 && rightDist <= 8.5)
   // Way too far away from the wall! We need to make a harsh right turn to readjust ourselves.
     readjustRightwardsStrong();
   else if (rightDist > 8.5 && rightDist <= 15)
@@ -256,21 +256,21 @@ void islandMovement(int front, int rightDist, bool rightBlocked) {
     }
 
   // Correcting the robot's path to ensure that it stays parallel to the wall on the right.
-  if (rightDist <= 3.5 && rightDist == 400) 
+  if (rightDist <= 3.5 || rightDist == 400) 
   // Way too close to the wall! We need to make a harsh left turn to readjust ourselves.
     readjustLeftwardsStrong();
-  else if (rightDist <= 4.5)
+  else if (rightDist <= 5)
   // Slightly too close to the wall. We need to make a slight left turn to readjust ourselves.
     readjustLeftwards();
-  else if (rightDist > 5.5 && rightDist <= 7)
+  else if (rightDist >= 6.25 && rightDist <= 7.5)
   // Slightly too far away from the wall. We need to make a slight right turn to readjust ourselves.
     readjustRightwards();
-  else if (rightDist > 7 && rightDist <= 8.5)
+  else if (rightDist > 7.5 && rightDist <= 8.5)
   // Way too far away from the wall! We need to make a harsh right turn to readjust ourselves.
     readjustRightwardsStrong();
   else if (rightDist > 8.5 && rightDist <= 15)
   // Way too far away from the wall! We need to make a very harsh right turn to readjust ourselves.
     readjustRightwardsVeryStrong();
   else
-    moveForward();
+    moveForward(); // only executes at 4.5 - 4.6cms away from the wall
 }
